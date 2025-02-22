@@ -85,11 +85,16 @@ def run_tests_understanding(encoding_types, model: str, prompts_seed_dict: dict[
         param_names = config['param_names']
         encoding_params = list(config['params_range'])
         
-        if len(encoding_params) > max_params:
-            encoding_params = random.sample(encoding_params, max_params)
-        
+        # if len(encoding_params) > max_params:
+        #     encoding_params = random.sample(encoding_params, max_params)
+        cur_params = 0
         for param_values in encoding_params:
             enc = encoder_func(*param_values)
+            if ("�" in enc("abra")):
+                continue
+            cur_params += 1
+            if cur_params > max_params:
+                break
             for enc_prefix, eng_prefix in product(UNDERSTANDING_ENCODED_PREFIXES, UNDERSTANDING_ENGLISH_PREFIXES):
                 prompts.extend(p for p in prompts_seed)
                 params.extend(dict(zip(param_names, param_values)) for p in prompts_seed)
