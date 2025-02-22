@@ -90,11 +90,25 @@ class ModelGPT:
                 v = kwargs.get(k, None)
                 if v:
                     body[k] = v
-            if "o1" in self.model_name or "o3" in self.model_name:
-                for k in ["max_tokens",]:
+            if self.model_name == "o1" or self.model_name == "o3-mini":
+                for k in ["max_tokens"]:
+                    v = kwargs.get(k, None)
+                    if v and v < 150:
+                        body['reasoning_effort'] = "low"
+                    elif v and v < 1500:
+                        body['reasoning_effort'] = "medium"
+                    elif v and v >= 1500:
+                        body['reasoning_effort'] = "high"
+            elif self.model_name == "o1-mini":
+                for k in ["max_tokens"]:
                     v = kwargs.get(k, None)
                     if v:
-                        body['max_completion_tokens'] = v
+                        body["max_completion_tokens"] = v
+            else:
+                for k in ["max_tokens"]:
+                    v = kwargs.get(k, None)
+                    if v:
+                        body[k] = v
             request = {
                 "custom_id": str(uuid.uuid4()),
                 "method": "POST", 
@@ -107,7 +121,7 @@ class ModelGPT:
         with open(input_file_nm, "w") as f:
             for request in batch_input:
                 f.write(json.dumps(request) + "\n")
-
+            logging.info(request)
         batch_input_file = self.client.files.create(
             file=open(input_file_nm, "rb"),
             purpose="batch"
@@ -139,7 +153,7 @@ class ModelGPT:
         Download the results of the batch job.
         """
         batch = self.client.batches.retrieve(batch_id)
-        print(batch)
+        # print(batch)
         if batch.status == "completed":
             file_response = self.client.files.content(batch.output_file_id)
             with open(output_file, "w") as f:
@@ -167,7 +181,7 @@ class ModelGPT:
         output_file_nm = "batch_output.jsonl"
         if self.download_batch_results(batch_id, output_file_nm):
             df = util.jsonl_to_df(input_file_nm).merge(util.jsonl_to_df(output_file_nm), how = 'left', on = 'custom_id')
-            return [util.extract_data(r['body']) for r in df['response'].tolist()]
+            return [self.parse_response(r) for r in df['response'].tolist()]
         else:
             print("Batch processing failed.")
             return [""] * len(msgs)
