@@ -6,6 +6,8 @@ def calculate_distance(response: str, reference: str):
     return sorted([(w, Levenshtein.distance(w, reference)) for w in response.split()], key=lambda x: x[1])
 
 def judge_understanding(response: str, references: list[str], cutoff: int):
+    if response == "":
+        response = "q"
     response_clean = response.lower().translate(str.maketrans('', '', string.punctuation))
     best_words, best_scores = zip(*[calculate_distance(response_clean, reference)[0] for reference in references])
     understood = min(best_scores) < cutoff
