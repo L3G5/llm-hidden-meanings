@@ -18,7 +18,7 @@ def extract_data(item):
         # index = choice.get('index', '')
         finish_reason = choice.get('finish_reason', '')
         
-        # usage = item.get('usage', {})
+        usage = item.get('usage', {})
         # prompt_tokens = usage.get('prompt_tokens', '')
         # completion_tokens = usage.get('completion_tokens', '')
         # total_tokens = usage.get('total_tokens', '')
@@ -28,6 +28,7 @@ def extract_data(item):
             # 'role': role,
             # 'index': index,
             'finish_reason': finish_reason,
+            'usage': usage,
             # 'prompt_tokens': prompt_tokens,
             # 'completion_tokens': completion_tokens,
             # 'total_tokens': total_tokens
