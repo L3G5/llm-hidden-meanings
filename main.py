@@ -57,6 +57,13 @@ TOGETHER_MODELS = [
     "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
 ]
 
+NEBIUS_MODELS = [
+    "microsoft/Phi-3.5-mini-instruct", #0.03$ in, 0.09$ out
+    "microsoft/phi-4", #$0.10, $0.30
+    "Qwen/Qwen2.5-32B-Instruct-fast", #0.06, 0.20
+    "Qwen/Qwen2.5-1.5B-Instruct", #0.02, 0.06
+]
+
 # model configs
 MODEL_CONFIGS = {
     "GigaChat-Max": dict(extra_body={"profanity_check": False}),
@@ -64,6 +71,7 @@ MODEL_CONFIGS = {
     "o3-mini": dict(seed=0),
     "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free": dict(sleep=0),
     "deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free": dict(sleep=0),
+    "deepseek-ai/DeepSeek-V3": dict(sleep=0),
 }
 
 logging.getLogger().setLevel(logging.INFO)

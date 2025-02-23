@@ -1,5 +1,3 @@
-# credits to https://github.com/tml-epfl/llm-past-tense/blob/main/models.py
-
 import os
 import openai
 import anthropic
@@ -71,9 +69,10 @@ class ModelGigaChat:
         return util.extract_data(response.to_dict())
 
 class ModelGPT:
-    def __init__(self, model_name):
+    def __init__(self, model_name, env = "OPENAI_API_KEY", batch_completed_status = "completed"):
         self.model_name = model_name
-        self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.client = openai.OpenAI(api_key=os.getenv(env))
+        self.batch_completed_status = batch_completed_status
 
 
     def create_batch_file(self, prompts, input_file_nm, **kwargs):
@@ -116,7 +115,7 @@ class ModelGPT:
                 "body": body
             }
             batch_input.append(request)
-        
+
         # Save the batch input to a JSONL file
         with open(input_file_nm, "w") as f:
             for request in batch_input:
@@ -154,7 +153,7 @@ class ModelGPT:
         """
         batch = self.client.batches.retrieve(batch_id)
         # print(batch)
-        if batch.status == "completed":
+        if batch.status == self.batch_completed_status:
             file_response = self.client.files.content(batch.output_file_id)
             with open(output_file, "w") as f:
                 f.write(file_response.text)
@@ -174,7 +173,7 @@ class ModelGPT:
         while True:
             status = self.check_batch_status(batch_id)
             # print(f"Batch status: {status}")
-            if status == "completed":
+            if status == self.batch_completed_status:
                 break
             time.sleep(60)  # Wait 1 minute before checking again
         
@@ -185,7 +184,7 @@ class ModelGPT:
         else:
             print("Batch processing failed.")
             return [""] * len(msgs)
-        
+
     def parse_response(self, response):
         return util.extract_data(response['body'])
 
@@ -311,6 +310,13 @@ class ModelTogether:
     
     def parse_response(self, response):
         return util.extract_data(response.model_dump())
+
+class ModelNebius(ModelGPT):
+    def __init__(self, model_name):
+        super().__init__(model_name, env = "NEBIUS_API_KEY", batch_completed_status = "done")
+        self.client.base_url="https://api.studio.nebius.com/v1/"
+    def parse_response(self, response):
+        return util.extract_data(response)
 
 # import torch
 # from transformers import AutoModelForCausalLM, AutoTokenizer
