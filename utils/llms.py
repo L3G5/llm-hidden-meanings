@@ -207,6 +207,11 @@ class ModelClaude:
                 v = kwargs.get(k, None)
                 if v:
                     body[k] = v
+            if self.model_name == "claude-3-7-sonnet-20250219":
+                body["thinking"] = {
+                    "type": "disabled",
+                }
+
             request = {
                 "custom_id": str(uuid.uuid4()),
                 "params": body
@@ -275,6 +280,7 @@ class ModelClaude:
             'content': response['content'][0]["text"],
             'model': response['model'],
             'finish_reason': response['stop_reason'],
+            'usage': response['usage'],
         }
         return parsed
 
