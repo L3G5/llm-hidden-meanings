@@ -79,7 +79,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 def run_tests_understanding(encoding_types, model: str, prompts_seed_dict: dict[str, str], max_params: int, **model_kwargs):
     logging.info(f"running {encoding_types} on {model}")
-    model_class = llms.ModelTogether if model in TOGETHER_MODELS else llms.ModelGigaChat if 'GigaChat' in model else llms.ModelGPT if 'gpt' in model or 'o1' in model or 'o3' in model else llms.ModelClaude if 'claude' in model else llms.ModelHuggingFace
+    model_class = llms.ModelTogether if model in TOGETHER_MODELS else llms.ModelNebius if model in NEBIUS_MODELS else llms.ModelGigaChat if 'GigaChat' in model else llms.ModelGPT if 'gpt' in model or 'o1' in model or 'o3' in model else llms.ModelClaude if 'claude' in model else llms.ModelHuggingFace
     target_llm = model_class(model)  
     
     prompts, prompts_enc, responses, params, params_tuples, prefixes, encoding_types_col = [], [], [], [], [], [], []
