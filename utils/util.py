@@ -1,5 +1,6 @@
 import pandas as pd
 import json
+from IPython.display import display
 
 def extract_data(item):
     row = {}
@@ -46,3 +47,15 @@ def jsonl_to_df(name):
 
     line_dicts = [json.loads(line) for line in lines]
     return pd.DataFrame(line_dicts)
+
+def load_log(path: str = "logs/20250222_221246_claude-3-5-sonnet-20241022_2b|3b|4b_200_10000_None_understanding.json"):
+    with open(path) as f:
+        results = json.load(f)
+    return pd.DataFrame(results['artifacts'])
+
+def filter_unc(df: pd.DataFrame):
+    return df.loc[~df['prompt_enc'].apply(lambda x: "�" in x)]
+
+def display_table(df: pd.DataFrame, max_colwidth = None, max_columns = 50, max_rows = 50):
+    with pd.option_context('display.max_colwidth', max_colwidth, 'display.max_columns', max_columns, 'display.max_rows', max_rows):
+        display(df)
