@@ -76,6 +76,7 @@ MODEL_CONFIGS = {
     "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free": dict(sleep=0),
     "deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free": dict(sleep=0),
     "deepseek-ai/DeepSeek-V3": dict(sleep=0),
+    "Vikhrmodels/Vikhr-Llama-3.2-1B-Instruct": dict(batch_size=20),
 }
 
 logging.getLogger().setLevel(logging.INFO)

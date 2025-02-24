@@ -65,7 +65,7 @@ class ModelHuggingFace:
         Get responses for a list of prompts using the Hugging Face model.
         Processes prompts in batches to improve efficiency.
         """
-        batch_size=kwargs.get("batch_size",4)
+        batch_size=kwargs.get("batch_size",20)
         responses = []
         for i in tqdm(range(0, len(msgs), batch_size)):
             batch = msgs[i:i + batch_size]

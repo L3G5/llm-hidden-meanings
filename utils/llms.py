@@ -319,7 +319,7 @@ class ModelNebius(ModelGPT):
         return util.extract_data(response)
 
 def load_hf():
-    import llms_hf
+    import utils.llms_hf as llms_hf
     llms_hf.ModelHuggingFace
 # import torch
 # from transformers import AutoModelForCausalLM, AutoTokenizer
