@@ -1,0 +1,18 @@
+[project]
+name = "hornandivory"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "aiohttp>=3.11.12",
+    "anthropic>=0.46.0",
+    "click>=8.1.8",
+    "ipykernel>=6.29.5",
+    "openai>=1.63.2",
+    "pandas>=2.2.3",
+    "python-dotenv>=1.0.1",
+    "rapidfuzz>=3.12.1",
+    "together>=1.4.1",
+    "tqdm>=4.67.1",
+]
