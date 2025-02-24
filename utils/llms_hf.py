@@ -66,6 +66,10 @@ class ModelHuggingFace:
         Processes prompts in batches to improve efficiency.
         """
         batch_size=kwargs.get("batch_size",20)
+        kwargs_real = {
+            # "batch_size": kwargs.get("batch_size",20),
+            "max_new_tokens": kwargs.get("max_tokens",200),
+        }
         responses = []
         for i in tqdm(range(0, len(msgs), batch_size)):
             batch = msgs[i:i + batch_size]
@@ -93,12 +97,12 @@ class ModelHuggingFace:
                 outputs = self.model.generate(
                     inputs.input_ids,
                     attention_mask=inputs.attention_mask,  # Include attention mask
-                    max_new_tokens=1512,
+                    # max_new_tokens=1512,
                     do_sample=True,
                     temperature=0.3,
                     top_k=50,
                     top_p=0.95,
-                    **kwargs
+                    **kwargs_real
                 )
 
                 # Decode and format each response in the batch
