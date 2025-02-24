@@ -43,16 +43,7 @@ class ModelHuggingFace:
         return {
             "created": int(datetime.now().timestamp()),
             "model": self.model_name,
-            "choices": [
-                {
-                    "message": {
-                        "content": content,
-                        "role": "assistant"
-                    },
-                    "finish_reason": finish_reason,
-                    "index": 0
-                }
-            ],
+            "content": content,
             "usage": {
                 "prompt_tokens": 0,  # Placeholder, update if token counts are available
                 "completion_tokens": 0,  # Placeholder
