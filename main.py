@@ -120,6 +120,9 @@ def run_tests_understanding(encoding_types, model: str, prompts_seed_dict: dict[
         msgs=prompts_enc,
         **model_kwargs,
     )
+    with open(f"responses_{datetime.now().strftime('%d_%m_%Y__%H_%M_%S')}.json", 'w') as f:
+        json.dump(responses, f, ensure_ascii=False)
+        
     df_res = pd.DataFrame(responses)
     df_res = pd.concat([pd.DataFrame(list(zip(prompts, encoding_types_col, params, params_tuples, prefixes, prompts_enc)), columns= ['prompt', 'encoding_type', 'params', 'params_tuples', 'prefixes', 'prompt_enc']), df_res], axis = 1)
     judgements =  [
