@@ -1,3 +1,4 @@
+from itertools import product
 # see https://en.wikipedia.org/wiki/UTF-8
 
 def create_encoding_4b(u, v, w, x):
@@ -132,3 +133,100 @@ def create_encoding_2b(x):
         return prefix + ''.join(result)
     
     return encoder
+
+
+# Configuration dictionary
+ENCODING_CONFIG = {
+    '2b': {
+        'params_range': product(range(7)),
+        'encoder': create_encoding_2b,
+        'param_names': ['x']
+    },
+    '3b': {
+        'params_range': product(range(16), repeat=2),
+        'encoder': create_encoding_3b,
+        'param_names': ['v', 'w']
+    },
+    '4b': {
+        'params_range': product(range(2), range(16), range(16), range(16)),
+        'encoder': create_encoding_4b,
+        'param_names': ['u', 'v', 'w', 'x']
+    }
+}
+
+def decoder(encoded_string):
+    result = []
+    byte_array = encoded_string.encode('utf-8')  # Convert string to raw bytes
+    i = 0
+    while i < len(byte_array):
+        byte1 = byte_array[i]
+        
+        # Determine the number of bytes in the UTF-8 sequence
+        if (byte1 & 0xF0) == 0xF0 and (byte1 & 0x08) == 0x00:  # 4-byte sequence
+            # Ensure there are enough bytes left
+            if i + 3 >= len(byte_array):
+                raise ValueError("Invalid 4-byte UTF-8 sequence")
+            
+            byte2 = byte_array[i+1]
+            byte3 = byte_array[i+2]
+            byte4 = byte_array[i+3]
+            
+            # Validate continuation bytes
+            if not ((byte2 & 0xC0) == 0x80 and (byte3 & 0xC0) == 0x80 and (byte4 & 0xC0) == 0x80):
+                raise ValueError("Invalid continuation bytes in 4-byte UTF-8 sequence")
+            
+            # Extract y and z from the bytes
+            y = ((byte3 & 0x3) << 2) | ((byte4 & 0x30) >> 4)
+            z = byte4 & 0xF
+            
+            # Reconstruct the original ASCII character
+            original_char = chr((y << 4) | z)
+            result.append(original_char)
+            
+            i += 4
+        elif (byte1 & 0xE0) == 0xE0:  # 3-byte sequence
+            # Ensure there are enough bytes left
+            if i + 2 >= len(byte_array):
+                raise ValueError("Invalid 3-byte UTF-8 sequence")
+            
+            byte2 = byte_array[i+1]
+            byte3 = byte_array[i+2]
+            
+            # Validate continuation bytes
+            if not ((byte2 & 0xC0) == 0x80 and (byte3 & 0xC0) == 0x80):
+                raise ValueError("Invalid continuation bytes in 3-byte UTF-8 sequence")
+            
+            # Extract y and z from the bytes
+            y = ((byte2 & 0x3) << 2) | ((byte3 & 0x30) >> 4)
+            z = byte3 & 0xF
+            
+            # Reconstruct the original ASCII character
+            original_char = chr((y << 4) | z)
+            result.append(original_char)
+            
+            i += 3
+        elif (byte1 & 0xC0) == 0xC0:  # 2-byte sequence
+            # Ensure there are enough bytes left
+            if i + 1 >= len(byte_array):
+                raise ValueError("Invalid 2-byte UTF-8 sequence")
+            
+            byte2 = byte_array[i+1]
+            
+            # Validate continuation byte
+            if not (byte2 & 0xC0) == 0x80:
+                raise ValueError("Invalid continuation byte in 2-byte UTF-8 sequence")
+            
+            # Extract y and z from the bytes
+            y = ((byte1 & 0x3) << 2) | ((byte2 & 0x30) >> 4)
+            z = byte2 & 0xF
+            
+            # Reconstruct the original ASCII character
+            original_char = chr((y << 4) | z)
+            result.append(original_char)
+            
+            i += 2
+        else:  # ASCII character (1-byte sequence)
+            result.append(chr(byte1))
+            i += 1
+    
+    return ''.join(result)
