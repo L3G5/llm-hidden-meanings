@@ -1,7 +1,5 @@
 import click
-import asyncio
-from itertools import product, batched
-from functools import partial
+from itertools import product
 import os
 import json
 from datetime import datetime
@@ -17,25 +15,6 @@ import random
 import dotenv
 dotenv.load_dotenv(override=True)
 
-# Configuration dictionary
-ENCODING_CONFIG = {
-    '2b': {
-        'params_range': product(range(7)),
-        'encoder': encs.create_encoding_2b,
-        'param_names': ['x']
-    },
-    '3b': {
-        'params_range': product(range(16), repeat=2),
-        'encoder': encs.create_encoding_3b,
-        'param_names': ['v', 'w']
-    },
-    '4b': {
-        'params_range': product(range(2), range(16), range(16), range(16)),
-        'encoder': encs.create_encoding_4b,
-        'param_names': ['u', 'v', 'w', 'x']
-    }
-}
-
 # prefixes for constructing queries
 
 # UNDERSTANDING_ENCODED_PREFIXES = ["say ", "repeat "]
@@ -49,42 +28,13 @@ MAX_LEVENSTEIN_OFFSET = 4
 # MAX_PARAMS_UNDERSTANDING = 16*16
 MAX_PARAMS_UNDERSTANDING = 10_000
 
-TOGETHER_MODELS = [
-    "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
-    "deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free",
-    "deepseek-ai/DeepSeek-V3", 
-    "meta-llama/Llama-3.2-3B-Instruct-Turbo", 
-    "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
-]
-
-NEBIUS_MODELS = [
-    "microsoft/Phi-3.5-mini-instruct", #0.03$ in, 0.09$ out
-    "microsoft/phi-4", #$0.10, $0.30
-    "Qwen/Qwen2.5-32B-Instruct-fast", #0.06, 0.20
-    "Qwen/Qwen2.5-1.5B-Instruct", #0.02, 0.06
-]
-
-HUGGINGFACE_MODELS = [
-    "Vikhrmodels/Vikhr-Llama-3.2-1B-Instruct"
-]
-
-# model configs
-MODEL_CONFIGS = {
-    "GigaChat-Max": dict(extra_body={"profanity_check": False}),
-    "gpt-4o-mini": dict(seed=0),
-    "o3-mini": dict(seed=0),
-    "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free": dict(sleep=0),
-    "deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free": dict(sleep=0),
-    "deepseek-ai/DeepSeek-V3": dict(sleep=0),
-    "Vikhrmodels/Vikhr-Llama-3.2-1B-Instruct": dict(batch_size=160),
-}
 
 logging.getLogger().setLevel(logging.INFO)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
 def run_tests_understanding(encoding_types, model: str, prompts_seed_dict: dict[str, str], max_params: int, **model_kwargs):
     logging.info(f"running {encoding_types} on {model}")
-    model_class = llms.ModelTogether if model in TOGETHER_MODELS else llms.ModelNebius if model in NEBIUS_MODELS else llms.ModelGigaChat if 'GigaChat' in model else llms.ModelGPT if 'gpt' in model or 'o1' in model or 'o3' in model else llms.ModelClaude if 'claude' in model else llms.load_hf()
+    model_class = llms.ModelTogether if model in util.TOGETHER_MODELS else llms.ModelNebius if model in util.NEBIUS_MODELS else llms.ModelGigaChat if 'GigaChat' in model else llms.ModelGPT if 'gpt' in model or 'o1' in model or 'o3' in model else llms.ModelClaude if 'claude' in model else llms.load_hf()
     target_llm = model_class(model)  
     
     prompts, prompts_enc, responses, params, params_tuples, prefixes, encoding_types_col = [], [], [], [], [], [], []
@@ -93,7 +43,7 @@ def run_tests_understanding(encoding_types, model: str, prompts_seed_dict: dict[
     
     for encoding_type in encoding_types:
         print(encoding_type)
-        config = ENCODING_CONFIG[encoding_type]
+        config = encs.ENCODING_CONFIG[encoding_type]
         encoder_func = config['encoder']
         param_names = config['param_names']
         encoding_params = list(config['params_range'])
@@ -153,7 +103,7 @@ def main(model, encodings, understanding_data, max_tokens, max_params, log_dir, 
         random.seed(seed)
     
     prompts_seed_dict = pd.read_csv(understanding_data, index_col="word").to_dict()['rules']
-    model_kwargs = MODEL_CONFIGS.get(model, {})
+    model_kwargs = util.MODEL_CONFIGS.get(model, {})
     
     log_data = {}
     log_data['metadata'] = dict(model = model, understanding_data = prompts_seed_dict, max_tokens = max_tokens, max_params = max_params, seed = seed, model_kwargs = model_kwargs)
@@ -161,7 +111,7 @@ def main(model, encodings, understanding_data, max_tokens, max_params, log_dir, 
     if encodings:
         encoding_types = encodings.split('|')
     else:
-        encoding_types = list(ENCODING_CONFIG.keys())
+        encoding_types = list(encs.ENCODING_CONFIG.keys())
         encodings = "|".join(encoding_types)
     result = run_tests_understanding(
         encoding_types=encoding_types, model=model, prompts_seed_dict = prompts_seed_dict, max_tokens = max_tokens, max_params=max_params, **model_kwargs
