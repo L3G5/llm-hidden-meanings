@@ -458,3 +458,95 @@ def decoder_v2(encoded_string):
             i += 1
     
     return ''.join(result)
+
+
+def create_encoding_2b_to_3b(w, x):
+    """
+    Creates an encoding function that maps 2-byte UTF-8 sequences to 3-byte UTF-8 sequences
+    with the format: 1110wwww 10xxxxyy 10yyzzzz
+    where w and x are fixed values, and y, z are derived from the input 2-byte UTF-8 sequence.
+    
+    Parameters:
+    w (int): Value for w bits (0-15)
+    x (int): Value for x bits (0-1)
+    
+    Returns:
+    function: A function that converts input 2-byte UTF-8 sequences to the specified 3-byte encoding
+    """
+    # Validate input parameters
+    if not (0 <= w <= 15 and 0 <= x <= 1):
+        raise ValueError("Parameters must be: 0 <= w <= 15, 0 <= x <= 1")
+    
+    def encoder(input_string, prefix=''):
+        result = []
+        for ch in input_string:
+            code_point = ord(ch)
+            if 0x80 <= code_point <= 0x7FF:  # Check if the character is a 2-byte UTF-8 sequence
+                # Extract x, y, and z from the 2-byte UTF-8 sequence
+                # The 2-byte UTF-8 format is: 110xxxyy 10yyzzzz
+                x0 = (code_point >> 8) & 0xF
+                y = (code_point >> 4) & 0xF  # Top 4 bits
+                z = code_point & 0xF         # Bottom 4 bits
+                # Construct the 4-byte UTF-8 sequence
+                byte1 = 0xE0 | w
+                byte2 = 0x80 | ((x0 + (x << 3)) << 2) | (y >> 2)
+                byte3 = 0x80 | ((y & 0x3) << 4) | z
+                                                
+                # Convert bytes to a UTF-8 character and append to result
+                encoded_char = bytes([byte1, byte2, byte3]).decode('utf-8', errors='replace')
+                result.append(encoded_char)
+            else:
+                # Pass through non-2-byte UTF-8 characters unchanged
+                result.append(ch)
+        
+        return prefix + ''.join(result)
+    
+    return encoder
+
+def create_encoding_2b_to_4b(u, v, w, x):
+    """
+    Creates an encoding function that maps 2-byte UTF-8 sequences to 4-byte UTF-8 sequences
+    with the format: 11110uvv 10vvwwww 10xxxxyy 10yyzzzz
+    where u, v, w, and x are fixed values, and y, z are derived from the input 2-byte UTF-8 sequence.
+    
+    Parameters:
+    u (int): Value for u bits (0-1)
+    v (int): Value for v bits (0-7)
+    w (int): Value for w bits (0-15)
+    x (int): Value for x bits (0-1)
+    
+    Returns:
+    function: A function that converts input 2-byte UTF-8 sequences to the specified 4-byte encoding
+    """
+    # Validate input parameters
+    if not (0 <= u <= 1 and 0 <= v <= 15 and 0 <= w <= 15 and 0 <= x <= 1):
+        raise ValueError("Parameters must be: 0 <= u <= 1, 0 <= v <= 15, 0 <= w <= 15, 0 <= x <= 1")
+    
+    def encoder(input_string, prefix=''):
+        result = []
+        for ch in input_string:
+            code_point = ord(ch)
+            if 0x80 <= code_point <= 0x7FF:  # Check if the character is a 2-byte UTF-8 sequence
+                # Extract y and z from the 2-byte UTF-8 sequence
+                # The 2-byte UTF-8 format is: 110xxxyy 10yyzzzz
+                x0 = (code_point >> 8) & 0xF
+                y = (code_point >> 4) & 0xF  # Top 4 bits
+                z = code_point & 0xF         # Bottom 4 bits
+                # Construct the 4-byte UTF-8 sequence
+                
+                # Construct the 4-byte UTF-8 sequence
+                byte1 = 0xF0 | (u << 2) | (v >> 2)               # 11110uvv
+                byte2 = 0x80 | ((v & 0x3) << 4) | w     # 10vvwwww
+                byte3 = 0x80 | ((x0 + (x << 3)) << 2) | (y >> 2)   # 10xxxxyy
+                byte4 = 0x80 | ((y & 0x3) << 4) | z              # 10yyzzzz
+                                                
+                # Convert bytes to a UTF-8 character and append to result
+                encoded_char = bytes([byte1, byte2, byte3, byte4]).decode('utf-8', errors='replace')
+                result.append(encoded_char)
+            else:
+                # Pass through non-2-byte UTF-8 characters unchanged
+                result.append(ch)
+        
+        return prefix + ''.join(result)
+    
+    return encoder
